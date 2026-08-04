@@ -10,7 +10,7 @@ add_library(handdistort SHARED
 
 target_include_directories(handdistort PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-# Path ke header TFLite yang sudah diekstrak
+# Path ke header TFLite yang sudah diekstrak (variabel TFLITE_DIR diset dari Gradle)
 set(TFLITE_INCLUDE_DIR ${TFLITE_DIR}/headers)
 target_include_directories(handdistort PRIVATE ${TFLITE_INCLUDE_DIR})
 
@@ -21,7 +21,9 @@ find_library(camera2ndk-lib camera2ndk)
 find_library(mediandk-lib mediandk)
 find_library(GLESv3-lib GLESv3)
 find_library(EGL-lib EGL)
-find_library(native_app_glue-lib native_app_glue)
+
+# Gunakan modul CMake untuk native_app_glue
+find_package(android_native_app_glue REQUIRED)
 
 # Library TFLite dari hasil ekstrak
 set(TFLITE_LIB_DIR ${TFLITE_DIR}/jni/arm64-v8a)
@@ -41,7 +43,7 @@ target_link_libraries(handdistort
     ${mediandk-lib}
     ${GLESv3-lib}
     ${EGL-lib}
-    ${native_app_glue-lib}
+    android_native_app_glue::android_native_app_glue
     tensorflowlite
     tensorflowlite_gpu
     -fopenmp
