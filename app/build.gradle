@@ -3,6 +3,7 @@ plugins {
 }
 
 android {
+    namespace 'com.example.handdistort'   // <-- TAMBAHKAN INI
     compileSdk 33
     ndkVersion "25.2.9519653"
 
