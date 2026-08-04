@@ -8,10 +8,13 @@ add_library(handdistort SHARED
     GLRenderer.cpp
 )
 
-# Include direktori sumber sendiri
 target_include_directories(handdistort PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-# Cari library Android
+# Path ke header TFLite yang sudah diekstrak
+set(TFLITE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/../../../../build/tflite/headers)
+target_include_directories(handdistort PRIVATE ${TFLITE_INCLUDE_DIR})
+
+# Library sistem
 find_library(android-lib android)
 find_library(log-lib log)
 find_library(camera2ndk-lib camera2ndk)
@@ -20,8 +23,16 @@ find_library(GLESv3-lib GLESv3)
 find_library(EGL-lib EGL)
 find_library(native_app_glue-lib native_app_glue)
 
-# Cari TensorFlow Lite melalui Prefab (nama pakai tanda hubung)
-find_package(tensorflow-lite REQUIRED CONFIG)
+# Library TFLite dari hasil ekstrak
+set(TFLITE_LIB_DIR ${CMAKE_BINARY_DIR}/../../../../build/tflite/jni/arm64-v8a)
+add_library(tensorflowlite SHARED IMPORTED)
+set_target_properties(tensorflowlite PROPERTIES
+    IMPORTED_LOCATION ${TFLITE_LIB_DIR}/libtensorflowlite.so
+)
+add_library(tensorflowlite_gpu SHARED IMPORTED)
+set_target_properties(tensorflowlite_gpu PROPERTIES
+    IMPORTED_LOCATION ${TFLITE_LIB_DIR}/libtensorflowlite_gpu.so
+)
 
 target_link_libraries(handdistort
     ${android-lib}
@@ -31,7 +42,7 @@ target_link_libraries(handdistort
     ${GLESv3-lib}
     ${EGL-lib}
     ${native_app_glue-lib}
-    tensorflow-lite::tensorflow-lite
-    tensorflow-lite-gpu::tensorflow-lite-gpu
+    tensorflowlite
+    tensorflowlite_gpu
     -fopenmp
 )
