@@ -20,8 +20,8 @@ find_library(GLESv3-lib GLESv3)
 find_library(EGL-lib EGL)
 find_library(native_app_glue-lib native_app_glue)
 
-# Cari TensorFlow Lite melalui Prefab
-find_package(tensorflowlite REQUIRED CONFIG)
+# Cari TensorFlow Lite melalui Prefab (nama pakai tanda hubung)
+find_package(tensorflow-lite REQUIRED CONFIG)
 
 target_link_libraries(handdistort
     ${android-lib}
@@ -31,7 +31,7 @@ target_link_libraries(handdistort
     ${GLESv3-lib}
     ${EGL-lib}
     ${native_app_glue-lib}
-    tensorflowlite::tensorflowlite
-    tensorflowlite::tensorflowlite_gpu
+    tensorflow-lite::tensorflow-lite
+    tensorflow-lite-gpu::tensorflow-lite-gpu
     -fopenmp
 )
