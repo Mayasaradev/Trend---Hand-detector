@@ -1,10 +1,12 @@
-// CameraManager.h
 #pragma once
 #include <camera/NdkCameraManager.h>
 #include <media/NdkImageReader.h>
 #include <android/native_window.h>
-#include <memory>
+#include <android_native_app_glue.h>   // <-- tambah
+#include <mutex>                       // <-- tambah
+#include <condition_variable>          // <-- tambah
 #include <vector>
+#include <memory>
 
 class CameraManager {
 public:
