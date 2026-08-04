@@ -3,13 +3,9 @@ plugins {
 }
 
 android {
-    namespace 'com.example.handdistort'   // <-- TAMBAHKAN INI
+    namespace 'com.example.handdistort'
     compileSdk 33
     ndkVersion "25.2.9519653"
-
-    buildFeatures {
-        prefab true
-}
 
     defaultConfig {
         applicationId "com.example.handdistort"
@@ -48,6 +44,22 @@ android {
         }
     }
 }
+
+// ✅ Task untuk mengekstrak TFLite dari AAR
+task extractTFLite(type: Copy) {
+    // Cari AAR TensorFlow Lite di classpath
+    def tfliteAar = configurations.findByName('debugRuntimeClasspath')
+            .find { it.name.contains('tensorflow-lite') && it.name.endsWith('.aar') }
+    if (!tfliteAar) {
+        throw new GradleException("TensorFlow Lite AAR not found")
+    }
+    from zipTree(tfliteAar)
+    include 'headers/**'
+    include 'jni/**'
+    into "$buildDir/tflite"
+}
+
+preBuild.dependsOn extractTFLite
 
 dependencies {
     implementation 'org.tensorflow:tensorflow-lite:2.13.0'
