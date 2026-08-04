@@ -11,7 +11,7 @@ add_library(handdistort SHARED
 target_include_directories(handdistort PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Path ke header TFLite yang sudah diekstrak
-set(TFLITE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/../../../../build/tflite/headers)
+set(TFLITE_INCLUDE_DIR ${TFLITE_DIR}/headers)
 target_include_directories(handdistort PRIVATE ${TFLITE_INCLUDE_DIR})
 
 # Library sistem
@@ -24,7 +24,7 @@ find_library(EGL-lib EGL)
 find_library(native_app_glue-lib native_app_glue)
 
 # Library TFLite dari hasil ekstrak
-set(TFLITE_LIB_DIR ${CMAKE_BINARY_DIR}/../../../../build/tflite/jni/arm64-v8a)
+set(TFLITE_LIB_DIR ${TFLITE_DIR}/jni/arm64-v8a)
 add_library(tensorflowlite SHARED IMPORTED)
 set_target_properties(tensorflowlite PROPERTIES
     IMPORTED_LOCATION ${TFLITE_LIB_DIR}/libtensorflowlite.so

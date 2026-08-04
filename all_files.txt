@@ -1,0 +1,144 @@
+=== app/build.gradle ===
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.example.handdistort'
+    compileSdk 33
+    ndkVersion "25.2.9519653"
+
+    defaultConfig {
+        applicationId "com.example.handdistort"
+        minSdk 24
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++17 -O3 -fopenmp"
+                arguments "-DANDROID_STL=c++_shared"
+            }
+        }
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.22.1"
+        }
+    }
+
+    sourceSets {
+        main {
+            assets.srcDirs = ['src/main/assets']
+        }
+    }
+}
+
+// ✅ Task untuk mengekstrak TFLite dari AAR
+task extractTFLite(type: Copy) {
+    // Cari AAR TensorFlow Lite di classpath
+    def tfliteAar = configurations.findByName('debugRuntimeClasspath')
+            .find { it.name.contains('tensorflow-lite') && it.name.endsWith('.aar') }
+    if (!tfliteAar) {
+        throw new GradleException("TensorFlow Lite AAR not found")
+    }
+    from zipTree(tfliteAar)
+    include 'headers/**'
+    include 'jni/**'
+    into "$buildDir/tflite"
+}
+
+preBuild.dependsOn extractTFLite
+
+dependencies {
+    implementation 'org.tensorflow:tensorflow-lite:2.13.0'
+    implementation 'org.tensorflow:tensorflow-lite-gpu:2.13.0'
+}
+=== CMakeLists.txt ===
+cmake_minimum_required(VERSION 3.18)
+project("handdistort")
+
+add_library(handdistort SHARED
+    main.cpp
+    CameraManager.cpp
+    TFLiteInference.cpp
+    GLRenderer.cpp
+)
+
+target_include_directories(handdistort PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Path ke header TFLite yang sudah diekstrak
+set(TFLITE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/../../../../build/tflite/headers)
+target_include_directories(handdistort PRIVATE ${TFLITE_INCLUDE_DIR})
+
+# Library sistem
+find_library(android-lib android)
+find_library(log-lib log)
+find_library(camera2ndk-lib camera2ndk)
+find_library(mediandk-lib mediandk)
+find_library(GLESv3-lib GLESv3)
+find_library(EGL-lib EGL)
+find_library(native_app_glue-lib native_app_glue)
+
+# Library TFLite dari hasil ekstrak
+set(TFLITE_LIB_DIR ${CMAKE_BINARY_DIR}/../../../../build/tflite/jni/arm64-v8a)
+add_library(tensorflowlite SHARED IMPORTED)
+set_target_properties(tensorflowlite PROPERTIES
+    IMPORTED_LOCATION ${TFLITE_LIB_DIR}/libtensorflowlite.so
+)
+add_library(tensorflowlite_gpu SHARED IMPORTED)
+set_target_properties(tensorflowlite_gpu PROPERTIES
+    IMPORTED_LOCATION ${TFLITE_LIB_DIR}/libtensorflowlite_gpu.so
+)
+
+target_link_libraries(handdistort
+    ${android-lib}
+    ${log-lib}
+    ${camera2ndk-lib}
+    ${mediandk-lib}
+    ${GLESv3-lib}
+    ${EGL-lib}
+    ${native_app_glue-lib}
+    tensorflowlite
+    tensorflowlite_gpu
+    -fopenmp
+)
+=== .github/workflows/ (all) ===
+total 11
+drwx------. 2 u0_a279 u0_a279 3452 Aug  5 01:04 .
+drwx------. 3 u0_a279 u0_a279 3452 Aug  4 19:43 ..
+-rw-------. 1 u0_a279 u0_a279  806 Aug  5 01:04 build.yaml
+
+=== settings.gradle ===
+rootProject.name = "HandDistortApp"
+include ':app'
+
+=== gradle.properties ===
+
+=== local.properties (if exists) ===
+
+=== src/cpp file list ===
+total 51
+drwx------. 2 u0_a279 u0_a279 3452 Aug  5 01:04 .
+drwx------. 6 u0_a279 u0_a279 3452 Aug  4 19:47 ..
+-rw-------. 1 u0_a279 u0_a279 1369 Aug  5 01:04 CMakeLists.txt
+-rw-------. 1 u0_a279 u0_a279 3602 Aug  4 19:51 CameraManager.cpp
+-rw-------. 1 u0_a279 u0_a279 1169 Aug  5 01:04 CameraManager.h
+-rw-------. 1 u0_a279 u0_a279 4848 Aug  4 19:54 GLRenderer.cpp
+-rw-------. 1 u0_a279 u0_a279 1087 Aug  5 01:04 GLRenderer.h
+-rw-------. 1 u0_a279 u0_a279 1776 Aug  4 19:55 Shaders.h
+-rw-------. 1 u0_a279 u0_a279 4585 Aug  4 20:11 TFLiteInference.cpp
+-rw-------. 1 u0_a279 u0_a279  949 Aug  4 19:52 TFLiteInference.h
+-rw-------. 1 u0_a279 u0_a279 3315 Aug  4 19:50 main.cpp

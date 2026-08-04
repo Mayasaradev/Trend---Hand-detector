@@ -16,7 +16,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++17 -O3 -fopenmp"
-                arguments "-DANDROID_STL=c++_shared"
+                arguments "-DANDROID_STL=c++_shared", "-DTFLITE_DIR=${buildDir}/tflite"
             }
         }
         ndk {
@@ -45,21 +45,22 @@ android {
     }
 }
 
-// ✅ Task untuk mengekstrak TFLite dari AAR
-task extractTFLite(type: Copy) {
-    // Cari AAR TensorFlow Lite di classpath
-    def tfliteAar = configurations.findByName('debugRuntimeClasspath')
-            .find { it.name.contains('tensorflow-lite') && it.name.endsWith('.aar') }
-    if (!tfliteAar) {
-        throw new GradleException("TensorFlow Lite AAR not found")
+afterEvaluate {
+    task extractTFLite(type: Copy) {
+        dependsOn configurations.debugRuntimeClasspath
+        def tfliteAar = configurations.debugRuntimeClasspath.files.find { 
+            it.name.startsWith('tensorflow-lite-') && it.name.endsWith('.aar') 
+        }
+        if (tfliteAar == null) {
+            throw new GradleException("TensorFlow Lite AAR not found")
+        }
+        from zipTree(tfliteAar)
+        include 'headers/**'
+        include 'jni/**'
+        into "$buildDir/tflite"
     }
-    from zipTree(tfliteAar)
-    include 'headers/**'
-    include 'jni/**'
-    into "$buildDir/tflite"
+    preBuild.dependsOn extractTFLite
 }
-
-preBuild.dependsOn extractTFLite
 
 dependencies {
     implementation 'org.tensorflow:tensorflow-lite:2.13.0'
