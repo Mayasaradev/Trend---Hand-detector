@@ -1,7 +1,8 @@
-// GLRenderer.h
 #pragma once
+#include <EGL/egl.h>                  // <-- tambah
 #include <GLES3/gl3.h>
 #include <android/native_window.h>
+#include <android/surface_texture.h>  // <-- tambah
 #include <array>
 
 class GLRenderer {
